@@ -101,7 +101,7 @@ export default class Context extends View {
     this.warned.add(a.address);
     this.save();
     notify({
-      title: `Contexto al ${pct}%`,
+      title: `Context at ${pct}%`,
       body: `${a.space_name} · ${short(used)}/${short(window)} · /compact`,
       level: "warning",
       action: { name: "agent.focus", args: { terminal: a.address } },
@@ -122,7 +122,7 @@ export default class Context extends View {
     };
     return h_flex().size_full().px(14).gap(18).items_center().bg(t.chrome).border_t(1).border_color(t.border)
       .text_size(11.5).text_color(t.muted)
-      .when(list.length === 0, (el) => el.child(div().text_color(t.dim).child("Sin agentes Claude Code")))
+      .when(list.length === 0, (el) => el.child(div().text_color(t.dim).child("No Claude Code agents")))
       .children(list.map((a) => {
         const c = this.ctx[a.address];
         const { used, window, pct } = c;

@@ -12,7 +12,7 @@ A slim bar that shows, for each Claude Code agent, its provider, model and effor
   - `Anthropic · Opus 5.5 · medium` in `dim` (provider · model · effort, plus `· fast` in fast mode), truncated at 220px;
   - a 60×5px rounded bar on `border`, filled in `done` below 60%, `working` from 60%, `blocked` from 80%;
   - `118k/1M · 12%` in `dim`, or in `blocked` from 80%.
-- With no Claude Code agents: `Sin agentes Claude Code` in `dim`.
+- With no Claude Code agents: `No Claude Code agents` in `dim`.
 
 ## How it behaves
 
@@ -20,7 +20,7 @@ A slim bar that shows, for each Claude Code agent, its provider, model and effor
 - The value is the last finished assistant turn: `input_tokens + cache_read_input_tokens + cache_creation_input_tokens`. It lags during a long turn.
 - Context size comes from the transcript line's `message.model`: 1M for `fable`, `mythos`, `opus-5`, `opus-4-6/7/8`, `sonnet-5`, `sonnet-4-6`, `haiku-5`; 200k for anything else (Haiku 4.5, older models), unless usage is already above 200k. `props: { "window": 200000 }` forces a size.
 - Click an entry: `agent.focus` on that agent. Hover: `hover` background.
-- Crossing 80%: one `notify` with level `warning`, title `Contexto al N%`, and an action that focuses the agent. It fires again for that agent only after it drops below 70% (for example after `/compact`). Warned agents are kept in the copy's `localStorage`.
+- Crossing 80%: one `notify` with level `warning`, title `Context at N%`, and an action that focuses the agent. It fires again for that agent only after it drops below 70% (for example after `/compact`). Warned agents are kept in the copy's `localStorage`.
 - Publishes `shared("context.usage")` = `{ "<address>": { used, window, pct, provider, model, effort, fast } }`, set only when it changes. Other mods can read it. For example, a clone of the shipped `pane` header can draw `Anthropic · Sonnet 5.5 · medium`, a 42px bar and `93k · 46%` for `props().terminal`.
 
 ## Built from
