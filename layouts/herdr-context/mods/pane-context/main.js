@@ -36,7 +36,7 @@ function folder(cwd) {
   return cwd === h ? "~" : cwd.startsWith(h + "/") ? "~" + cwd.slice(h.length) : cwd;
 }
 
-const short = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.round(n / 1000) + "k");
+const short = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(1) + "M" : Math.round(n / 1000) + "k");
 
 // A small bar and "106k · 53%", colored by how full it is.
 function contextChip(t, c) {

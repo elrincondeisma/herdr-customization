@@ -8,7 +8,7 @@ Herdr's default window, plus how much context each Claude Code agent has used: a
 
 The layout is a clone of Herdr's `main`. Only two things differ:
 
-- **Status bar** (28px, bottom of the work column): a `row` split in two equal halves. The left half is the shipped `workspace-status` (machine, branch, agents, palette hint). The right half is the `context` mod: per Claude Code agent, its label, a 60×5px bar and `118k/200k · 59%`. See `mods/context` in this repo for the full brief.
+- **Status bar** (28px, bottom of the work column): a `row` split in two equal halves. The left half is the shipped `workspace-status` (machine, branch, agents, palette hint). The right half is the `context` mod: per Claude Code agent, its label, a 60×5px bar and `118k/1M · 12%`. See `mods/context` in this repo for the full brief.
 - **Pane headers** (30px, top of each pane): `pane-context`, a clone of the shipped `pane` header. When the pane runs a Claude Code agent, it adds a 42×4px bar and `93k · 46%` (11px) on the right, before the status icon.
 
 Bar and text colors: `done` below 60%, `working` from 60%, `blocked` from 80%.
@@ -32,7 +32,7 @@ Bar and text colors: `done` below 60%, `working` from 60%, `blocked` from 80%.
 - The pane headers only show a meter while the `context` block is in the layout, because it is the one that fills `shared("context.usage")`.
 - Both mods carry the same `short()` formatter. Keep them in step if you change one.
 - `pane-context` is a frozen copy of Herdr's `pane`. It won't pick up later changes to the shipped header.
-- Every limit of `mods/context` applies here too: Claude Code only, the newest transcript per folder wins, and the 200k/1M guess.
+- Every limit of `mods/context` applies here too: Claude Code only, the newest transcript per folder wins, and the window comes from a model-id table.
 
 ## Done when
 

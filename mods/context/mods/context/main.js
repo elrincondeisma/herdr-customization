@@ -1,5 +1,5 @@
 // Context used by each Claude Code agent, read from its transcript's last `usage`.
-// props: { window?: number } forces the context size (default: 200k, 1M once above 200k).
+// props: { window?: number } forces the context size (default: from the transcript's model).
 // Publishes shared("context.usage") = { address: { used, window, pct } } for other mods
 // (the pane-context header), and posts a warning once an agent passes 80%.
 
@@ -16,9 +16,14 @@ while [ -z "$f" ] && [ -n "$d" ]; do
 done
 [ -n "$f" ] && tail -n 400 "$f" | grep '"usage"' | grep '"role":"assistant"' | grep -v '<synthetic>' | tail -1`;
 
+// Context window by model id: these families have 1M; older ones (Haiku 4.5, Claude 3.x,
+// Sonnet/Opus 4.0-4.5) have 200k. Unknown ids above 200k used are taken as 1M.
+const MILLION = /fable|mythos|opus-5|opus-4-[678]|sonnet-5|sonnet-4-6|haiku-5/;
+const windowFor = (model, used) => (MILLION.test(model ?? "") || used > 200000 ? 1000000 : 200000);
+
 const WARN = 80;   // warn at this %
 const REARM = 70;  // warn again only after dropping below this (e.g. after /compact)
-const short = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : Math.round(n / 1000) + "k");
+const short = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(1) + "M" : Math.round(n / 1000) + "k");
 
 export default class Context extends View {
   init(_props, cx) {
@@ -43,9 +48,10 @@ export default class Context extends View {
           const r = await exec("sh", ["-c", SCRIPT, "sh", cwd], { on: machine, timeout: 4000 });
           const line = r.stdout.trim();
           if (!line) continue;
-          const u = JSON.parse(line).message.usage;
+          const msg = JSON.parse(line).message;
+          const u = msg.usage;
           const used = (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
-          const window = fixed ?? (used > 200000 ? 1000000 : 200000);
+          const window = fixed ?? windowFor(msg.model, used);
           const pct = Math.min(100, Math.round((100 * used) / window));
           this.ctx[a.address] = { used, window, pct };
           this.warn(a, pct, used, window);
