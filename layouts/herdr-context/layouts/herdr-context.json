@@ -174,7 +174,7 @@
               "id": "context",
               "type": "block",
               "size": {
-                "weight": 1
+                "weight": 2
               },
               "content": {
                 "mod": "context"

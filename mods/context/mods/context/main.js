@@ -1,6 +1,7 @@
 // Context used by each Claude Code agent, read from its transcript's last `usage`.
 // props: { window?: number } forces the context size (default: from the transcript's model).
-// Publishes shared("context.usage") = { address: { used, window, pct } } for other mods
+// Also shows the session's provider, model and effort (from the same transcript line).
+// Publishes shared("context.usage") = { address: { used, window, pct, provider, model, effort, fast } } for other mods
 // (the pane-context header), and posts a warning once an agent passes 80%.
 
 import { View, div } from "gpui-kit";
@@ -20,6 +21,27 @@ done
 // Sonnet/Opus 4.0-4.5) have 200k. Unknown ids above 200k used are taken as 1M.
 const MILLION = /fable|mythos|opus-5|opus-4-[678]|sonnet-5|sonnet-4-6|haiku-5/;
 const windowFor = (model, used) => (MILLION.test(model ?? "") || used > 200000 ? 1000000 : 200000);
+
+// The transcript names no provider: guess it from the model id and request id.
+// Bedrock ids carry an "anthropic." prefix or an ARN, older Vertex ids an "@date";
+// the Anthropic API returns "req_..." request ids. Anything else stays "?".
+function providerOf(model, requestId) {
+  if (/^arn:aws|(^|\.)anthropic\./.test(model ?? "")) return "Bedrock";
+  if ((model ?? "").includes("@")) return "Vertex";
+  if (/^req_/.test(requestId ?? "")) return "Anthropic";
+  return "?";
+}
+
+// "claude-opus-5-5" -> "Opus 5.5", "claude-haiku-4-5-20251001" -> "Haiku 4.5".
+function modelName(id) {
+  const m = /(opus|sonnet|haiku|fable|mythos)-(\d)(?:-(\d)(?!\d))?/.exec(id ?? "");
+  if (!m) return id ?? "?";
+  return m[1][0].toUpperCase() + m[1].slice(1) + " " + m[2] + (m[3] ? "." + m[3] : "");
+}
+
+// "Anthropic · Opus 5.5 · medium" (+ " · fast" in fast mode).
+const describe = (c) =>
+  [c.provider, c.model, c.effort, c.fast ? "fast" : null].filter(Boolean).join(" · ");
 
 const WARN = 80;   // warn at this %
 const REARM = 70;  // warn again only after dropping below this (e.g. after /compact)
@@ -48,12 +70,19 @@ export default class Context extends View {
           const r = await exec("sh", ["-c", SCRIPT, "sh", cwd], { on: machine, timeout: 4000 });
           const line = r.stdout.trim();
           if (!line) continue;
-          const msg = JSON.parse(line).message;
+          const entry = JSON.parse(line);
+          const msg = entry.message;
           const u = msg.usage;
           const used = (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
           const window = fixed ?? windowFor(msg.model, used);
           const pct = Math.min(100, Math.round((100 * used) / window));
-          this.ctx[a.address] = { used, window, pct };
+          this.ctx[a.address] = {
+            used, window, pct,
+            provider: providerOf(msg.model, entry.requestId),
+            model: modelName(msg.model),
+            effort: entry.perTurnEffort ?? entry.effort ?? null,
+            fast: u.speed === "fast",
+          };
           this.warn(a, pct, used, window);
         } catch (_) { /* machine offline or line cut: keep the last value */ }
       }
@@ -95,10 +124,12 @@ export default class Context extends View {
       .text_size(11.5).text_color(t.muted)
       .when(list.length === 0, (el) => el.child(div().text_color(t.dim).child("Sin agentes Claude Code")))
       .children(list.map((a) => {
-        const { used, window, pct } = this.ctx[a.address];
+        const c = this.ctx[a.address];
+        const { used, window, pct } = c;
         return h_flex().id(`ctx-${a.address}`).gap(7).items_center().rounded(4).px(4)
           .hover((s) => s.bg(t.hover)).on_click(() => run("agent.focus", { terminal: a.address }))
           .child(div().text_color(a.focused ? t.foreground : t.muted).truncate().max_w(180).child(/^\d+$/.test(a.tab_name ?? "") ? a.space_name : `${a.space_name} · ${a.tab_name}`))
+          .child(div().text_color(t.dim).truncate().max_w(220).child(describe(c)))
           .child(bar(pct))
           .child(div().text_color(pct >= 80 ? t.blocked : t.dim).child(`${short(used)}/${short(window)} · ${pct}%`));
       }));

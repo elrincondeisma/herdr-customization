@@ -38,10 +38,11 @@ function folder(cwd) {
 
 const short = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(1) + "M" : Math.round(n / 1000) + "k");
 
-// A small bar and "106k · 53%", colored by how full it is.
+// "Anthropic · Opus 5.5 · medium", then a small bar and "106k · 53%", colored by how full it is.
 function contextChip(t, c) {
   const color = c.pct >= 80 ? t.blocked : c.pct >= 60 ? t.working : t.done;
   return h_flex().flex_none().gap(6).items_center().text_size(11).text_color(c.pct >= 80 ? t.blocked : t.dim)
+    .child(div().truncate().max_w(240).child([c.provider, c.model, c.effort, c.fast ? "fast" : null].filter(Boolean).join(" · ")))
     .child(div().w(42).h(4).rounded(2).bg(t.border)
       .child(div().h_full().rounded(2).bg(color).w(Math.max(2, Math.round((42 * c.pct) / 100)))))
     .child(`${short(c.used)} · ${c.pct}%`);

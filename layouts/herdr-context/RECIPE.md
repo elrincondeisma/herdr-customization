@@ -8,8 +8,8 @@ Herdr's default window, plus how much context each Claude Code agent has used: a
 
 The layout is a clone of Herdr's `main`. Only two things differ:
 
-- **Status bar** (28px, bottom of the work column): a `row` split in two equal halves. The left half is the shipped `workspace-status` (machine, branch, agents, palette hint). The right half is the `context` mod: per Claude Code agent, its label, a 60×5px bar and `118k/1M · 12%`. See `mods/context` in this repo for the full brief.
-- **Pane headers** (30px, top of each pane): `pane-context`, a clone of the shipped `pane` header. When the pane runs a Claude Code agent, it adds a 42×4px bar and `93k · 46%` (11px) on the right, before the status icon.
+- **Status bar** (28px, bottom of the work column): a `row` split 1:2. The left third is the shipped `workspace-status` (machine, branch, agents, palette hint). The right two thirds is the `context` mod: per Claude Code agent, its label, `provider · model · effort`, a 60×5px bar and `118k/1M · 12%`. See `mods/context` in this repo for the full brief.
+- **Pane headers** (30px, top of each pane): `pane-context`, a clone of the shipped `pane` header. When the pane runs a Claude Code agent, it adds `Anthropic · Sonnet 5.5 · medium`, a 42×4px bar and `93k · 46%` (11px) on the right, before the status icon.
 
 Bar and text colors: `done` below 60%, `working` from 60%, `blocked` from 80%.
 
@@ -22,8 +22,8 @@ Bar and text colors: `done` below 60%, `working` from 60%, `blocked` from 80%.
 
 ## Built from
 
-- `layouts/herdr-context.json`: `main`'s tree. The `status` block is replaced by `status-row` (`row`, 28px, `resizable: false`), whose children are `status` (`workspace-status`, weight 1) and `context` (`context`, weight 1). The tab block's `pane.header.content.mod` is `pane-context`. `preview` is `layouts/herdr-context.svg`.
-- `mods/context`: reads `~/.claude/projects/<slug>/*.jsonl` with `exec("sh", …, { on: space.machine })`, posts `notify`, and publishes `shared("context.usage")` = `{ address: { used, window, pct } }`.
+- `layouts/herdr-context.json`: `main`'s tree. The `status` block is replaced by `status-row` (`row`, 28px, `resizable: false`), whose children are `status` (`workspace-status`, weight 1) and `context` (`context`, weight 2). The tab block's `pane.header.content.mod` is `pane-context`. `preview` is `layouts/herdr-context.svg`.
+- `mods/context`: reads `~/.claude/projects/<slug>/*.jsonl` with `exec("sh", …, { on: space.machine })`, posts `notify`, and publishes `shared("context.usage")` = `{ address: { used, window, pct, provider, model, effort, fast } }`.
 - `mods/pane-context`: the shipped `pane` mod plus `shared` and a `contextChip(theme, usage)` helper. It reads `shared("context.usage")[props().terminal]` and runs nothing itself.
 - The shipped mods it uses as they are: `workspace-chrome`, `spaces`, `agents`, `tabs`, `files`, `changes`, `workspace-status`.
 
@@ -39,4 +39,4 @@ Bar and text colors: `done` below 60%, `working` from 60%, `blocked` from 80%.
 - `herdr-app check` passes for `mods/context` and `mods/pane-context`. `layout.switch {"name":"herdr-context"}` shows the window with no `layout.error`.
 - A Claude Code pane's header shows `Nk · N%`, and the status bar shows the same number for that agent.
 - A shell pane's header shows no meter.
-- The status bar's left half still shows `workspace-status`.
+- The status bar's left third still shows `workspace-status`.
